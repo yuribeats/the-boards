@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>THE BOARDS</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      font-weight: 900;
+      text-transform: uppercase;
+      background: #fff;
+      color: #000;
+      padding: 24px;
+    }
+
+    h1 {
+      font-size: 48px;
+      font-weight: 900;
+      letter-spacing: 2px;
+      margin-bottom: 8px;
+    }
+
+    .last-updated {
+      font-size: 14px;
+      font-weight: 900;
+      margin-bottom: 16px;
+    }
+
+    .separator {
+      border: none;
+      border-top: 1px solid #000;
+      margin: 0 0 16px 0;
+    }
+
+    .table-wrapper {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 10px 12px;
+      border-bottom: 1px solid #000;
+      font-weight: 900;
+      vertical-align: top;
+      word-break: break-word;
+    }
+
+    th {
+      cursor: pointer;
+      user-select: none;
+      white-space: nowrap;
+      font-size: 14px;
+      border-bottom: 2px solid #000;
+    }
+
+    th:hover {
+      background: #000;
+      color: #fff;
+    }
+
+    th .sort-arrow {
+      margin-left: 4px;
+      font-size: 10px;
+    }
+
+    tr:last-child td {
+      border-bottom: 1px solid #000;
+    }
+
+    td.desc {
+      max-width: 320px;
+    }
+
+    .loading {
+      padding: 40px 0;
+      font-size: 16px;
+      font-weight: 900;
+    }
+
+    @media (max-width: 768px) {
+      body { padding: 16px; }
+      h1 { font-size: 32px; }
+      table { font-size: 12px; }
+      th, td { padding: 8px 6px; }
+    }
+  </style>
+</head>
+<body>
+  <h1>THE BOARDS</h1>
+  <div class="last-updated" id="lastUpdated"></div>
+  <hr class="separator">
+  <div class="table-wrapper">
+    <div class="loading" id="loading">LOADING...</div>
+    <table id="table" style="display:none">
+      <thead>
+        <tr>
+          <th data-col="type">TYPE<span class="sort-arrow"></span></th>
+          <th data-col="date">DATE<span class="sort-arrow"></span></th>
+          <th data-col="phone">PHONE<span class="sort-arrow"></span></th>
+          <th data-col="email">EMAIL<span class="sort-arrow"></span></th>
+          <th data-col="description">DESCRIPTION<span class="sort-arrow"></span></th>
+          <th data-col="board">BOARD<span class="sort-arrow"></span></th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+  <script>
+    let rows = [];
+    let sortCol = null;
+    let sortAsc = true;
+
+    async function load() {
+      try {
+        const res = await fetch('/api/data');
+        const data = await res.json();
+        rows = data.rows || [];
+
+        if (data.lastUpdated) {
+          const d = new Date(data.lastUpdated);
+          const months = ['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'];
+          if (!isNaN(d.getTime())) {
+            document.getElementById('lastUpdated').textContent =
+              'LAST UPDATED: ' + months[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
+          } else {
+            document.getElementById('lastUpdated').textContent = 'LAST UPDATED: ' + data.lastUpdated.toUpperCase();
+          }
+        }
+
+        render();
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('table').style.display = 'table';
+      } catch (e) {
+        document.getElementById('loading').textContent = 'FAILED TO LOAD DATA';
+      }
+    }
+
+    function render() {
+      const tbody = document.getElementById('tbody');
+      tbody.innerHTML = '';
+      const sorted = [...rows];
+
+      if (sortCol) {
+        sorted.sort((a, b) => {
+          let va = (a[sortCol] || '').toLowerCase();
+          let vb = (b[sortCol] || '').toLowerCase();
+          if (sortCol === 'date') {
+            va = new Date(a.date) || 0;
+            vb = new Date(b.date) || 0;
+            return sortAsc ? va - vb : vb - va;
+          }
+          if (va < vb) return sortAsc ? -1 : 1;
+          if (va > vb) return sortAsc ? 1 : -1;
+          return 0;
+        });
+      }
+
+      for (const row of sorted) {
+        const tr = document.createElement('tr');
+        for (const col of ['type','date','phone','email','description','board']) {
+          const td = document.createElement('td');
+          td.textContent = row[col] || '';
+          if (col === 'description') td.className = 'desc';
+          tr.appendChild(td);
+        }
+        tbody.appendChild(tr);
+      }
+    }
+
+    document.querySelectorAll('th[data-col]').forEach(th => {
+      th.addEventListener('click', () => {
+        const col = th.dataset.col;
+        if (sortCol === col) {
+          sortAsc = !sortAsc;
+        } else {
+          sortCol = col;
+          sortAsc = true;
+        }
+
+        document.querySelectorAll('.sort-arrow').forEach(s => s.textContent = '');
+        th.querySelector('.sort-arrow').textContent = sortAsc ? ' ▲' : ' ▼';
+
+        render();
+      });
+    });
+
+    load();
+  </script>
+</body>
+</html>
