@@ -7,28 +7,34 @@ export default async function handler(req, res) {
     const csv = await response.text();
 
     const lines = parseCSV(csv);
-    if (lines.length < 2) {
+
+    let headerRow = -1;
+    for (let i = 0; i < lines.length; i++) {
+      if (lines[i].some(c => c.trim().toLowerCase() === 'service')) {
+        headerRow = i;
+        break;
+      }
+    }
+    if (headerRow === -1) {
       return res.status(200).json({ lastUpdated: '', rows: [] });
     }
 
-    const headers = lines[0].map(h => h.trim().toLowerCase());
+    const headers = lines[headerRow].map(h => h.trim().toLowerCase());
     const typeIdx = headers.indexOf('service');
     const dateIdx = headers.indexOf('date uploaded');
-    const contactIdx = headers.indexOf('contact info');
+    const phoneIdx = headers.indexOf('phone');
+    const emailIdx = headers.indexOf('email');
     const descIdx = headers.indexOf('site');
     const boardIdx = headers.indexOf('board');
 
     let lastUpdated = '';
     const rows = [];
 
-    for (let i = 1; i < lines.length; i++) {
+    for (let i = headerRow + 1; i < lines.length; i++) {
       const cols = lines[i];
       if (cols.length < 2) continue;
 
       const rawDate = (cols[dateIdx] || '').trim();
-      const contact = (cols[contactIdx] || '').trim();
-
-      const { phone, email } = splitContact(contact);
 
       if (rawDate && isMoreRecent(rawDate, lastUpdated)) {
         lastUpdated = rawDate;
@@ -36,11 +42,11 @@ export default async function handler(req, res) {
 
       rows.push({
         type: (cols[typeIdx] || '').trim(),
-        date: rawDate,
-        phone,
-        email,
+        phone: (cols[phoneIdx] || '').trim(),
+        email: (cols[emailIdx] || '').trim(),
         description: (cols[descIdx] || '').trim(),
-        board: (cols[boardIdx] || '').trim()
+        board: (cols[boardIdx] || '').trim(),
+        date: rawDate
       });
     }
 

@@ -126,11 +126,11 @@
       <thead>
         <tr>
           <th data-col="type">SERVICE<span class="sort-arrow"></span></th>
-          <th data-col="date">DATE<span class="sort-arrow"></span></th>
           <th data-col="phone">PHONE<span class="sort-arrow"></span></th>
           <th data-col="email">EMAIL<span class="sort-arrow"></span></th>
           <th data-col="description">SITE<span class="sort-arrow"></span></th>
           <th data-col="board">BOARD<span class="sort-arrow"></span></th>
+          <th data-col="date">DATE UPLOADED<span class="sort-arrow"></span></th>
         </tr>
       </thead>
       <tbody id="tbody"></tbody>
@@ -189,7 +189,7 @@
 
       for (const row of sorted) {
         const tr = document.createElement('tr');
-        for (const col of ['type','date','phone','email','description','board']) {
+        for (const col of ['type','phone','email','description','board','date']) {
           const td = document.createElement('td');
           td.textContent = row[col] || '';
           if (col === 'description') td.className = 'desc';
