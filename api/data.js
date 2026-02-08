@@ -15,7 +15,7 @@ export default async function handler(req, res) {
     const typeIdx = headers.indexOf('type');
     const dateIdx = headers.indexOf('date uploaded');
     const contactIdx = headers.indexOf('contact info');
-    const descIdx = headers.indexOf('description');
+    const descIdx = headers.indexOf('site');
     const boardIdx = headers.indexOf('board');
 
     let lastUpdated = '';
