@@ -49,16 +49,17 @@
     .separator {
       border: none;
       border-top: 2px solid #000;
-      margin: 0;
+      margin: 0 -24px;
     }
 
     .table-wrapper {
       overflow-x: auto;
       -webkit-overflow-scrolling: touch;
+      margin: 0 -24px;
     }
 
     table {
-      width: 100%;
+      width: calc(100% + 48px);
       border-collapse: collapse;
       font-size: 13px;
     }
@@ -177,6 +178,9 @@
       body { padding: 12px; }
       h1 { font-size: 28px; }
       .burger { top: 12px; left: 12px; }
+      .separator { margin: 0 -12px; }
+      .table-wrapper { margin: 0 -12px; }
+      table { width: calc(100% + 24px); }
       table { font-size: 11px; }
       th, td { padding: 8px 6px; }
       .hide-mobile { display: none; }
