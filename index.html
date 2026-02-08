@@ -178,14 +178,40 @@
       text-align: center;
     }
 
-    .expand-row { display: none; }
-    .expand-row td {
-      padding: 8px 12px 16px;
-      border-bottom: 2px solid #000;
+    .name-link {
+      cursor: pointer;
+      text-decoration: underline;
     }
-    .expand-row .expand-label { font-size: 11px; opacity: 0.5; }
-    .expand-row .expand-item { margin-bottom: 6px; }
-    .expand-row .expand-item:last-child { margin-bottom: 0; }
+    .name-link:hover { opacity: 0.5; }
+
+    .profile {
+      display: none;
+      margin: 0 -24px;
+      padding: 0 24px;
+    }
+    .profile.active { display: block; }
+    .profile-back {
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 900;
+      padding: 12px 0;
+      display: inline-block;
+    }
+    .profile-back:hover { opacity: 0.5; }
+    .profile-field {
+      padding: 12px 0;
+      border-bottom: 2px solid #000;
+      margin: 0 -24px;
+      padding-left: 24px;
+    }
+    .profile-label {
+      font-size: 11px;
+      opacity: 0.5;
+      margin-bottom: 4px;
+    }
+    .profile-value {
+      font-size: 14px;
+    }
 
     @media (max-width: 768px) {
       body { padding: 12px; }
@@ -196,9 +222,8 @@
       table { width: calc(100% + 24px); }
       table { font-size: 11px; }
       th, td { padding: 8px 6px; }
-      .hide-mobile { display: none; }
-      tbody tr:not(.expand-row) { cursor: pointer; }
-      .expand-row.open { display: table-row; }
+      .profile { margin: 0 -12px; padding: 0 12px; }
+      .profile-field { margin: 0 -12px; padding-left: 12px; }
     }
   </style>
 </head>
@@ -221,6 +246,7 @@
   <hr class="separator">
   <div class="mode-label" id="modeLabel" style="display:none"></div>
   <hr class="separator" id="separator2" style="display:none">
+  <div class="profile" id="profile"></div>
   <div class="image-feed" id="imageFeed"></div>
   <div class="table-wrapper" id="tableWrapper">
     <div class="loading" id="loading">LOADING...</div>
@@ -236,7 +262,8 @@
     let sortCol = null;
     let sortAsc = true;
     let showStarred = false;
-    const MOBILE_COLS = 3;
+    const VISIBLE_COLS = ['name', 'service', 'site'];
+    const PROFILE_COLS = ['name', 'site', 'phone', 'email', 'board', 'date uploaded'];
 
     function getStarred() {
       try { return JSON.parse(localStorage.getItem('starred') || '[]'); } catch { return []; }
@@ -287,14 +314,13 @@
       starTh.className = 'star-col';
       starTh.style.cursor = 'default';
       thead.appendChild(starTh);
-      columns.forEach((col, i) => {
+      VISIBLE_COLS.forEach(col => {
         const th = document.createElement('th');
         th.dataset.col = col;
         th.textContent = col.toUpperCase();
         const arrow = document.createElement('span');
         arrow.className = 'sort-arrow';
         th.appendChild(arrow);
-        if (i >= MOBILE_COLS) th.classList.add('hide-mobile');
         th.addEventListener('click', () => {
           if (sortCol === col) { sortAsc = !sortAsc; }
           else { sortCol = col; sortAsc = true; }
@@ -331,7 +357,7 @@
       if (showStarred && filtered.length === 0) {
         const tr = document.createElement('tr');
         const td = document.createElement('td');
-        td.colSpan = columns.length + 1;
+        td.colSpan = VISIBLE_COLS.length + 1;
         td.textContent = 'NO STARRED LISTINGS';
         td.style.textAlign = 'center';
         td.style.padding = '40px 0';
@@ -351,29 +377,45 @@
           render();
         });
         tr.appendChild(starTd);
-        columns.forEach((col, i) => {
+        VISIBLE_COLS.forEach(col => {
           const td = document.createElement('td');
           td.textContent = row[col] || '';
-          if (i >= MOBILE_COLS) td.classList.add('hide-mobile');
+          if (col === 'name') {
+            td.className = 'name-link';
+            td.addEventListener('click', () => showProfile(row));
+          }
           tr.appendChild(td);
         });
         tbody.appendChild(tr);
-
-        const hiddenCols = columns.slice(MOBILE_COLS);
-        if (hiddenCols.length > 0) {
-          const expandTr = document.createElement('tr');
-          expandTr.className = 'expand-row';
-          const expandTd = document.createElement('td');
-          expandTd.colSpan = MOBILE_COLS + 1;
-          expandTd.innerHTML = hiddenCols
-            .filter(col => row[col])
-            .map(col => '<div class="expand-item"><span class="expand-label">' + col.toUpperCase() + '</span><br>' + row[col] + '</div>')
-            .join('');
-          expandTr.appendChild(expandTd);
-          tbody.appendChild(expandTr);
-          tr.addEventListener('click', () => expandTr.classList.toggle('open'));
-        }
       }
+    }
+
+    function showProfile(row) {
+      document.getElementById('tableWrapper').style.display = 'none';
+      document.querySelector('.separator').style.display = 'none';
+      const profile = document.getElementById('profile');
+      profile.classList.add('active');
+      profile.innerHTML = '';
+
+      const back = document.createElement('div');
+      back.className = 'profile-back';
+      back.textContent = '\u2190 BACK';
+      back.addEventListener('click', () => {
+        profile.classList.remove('active');
+        profile.innerHTML = '';
+        document.getElementById('tableWrapper').style.display = '';
+        document.querySelector('.separator').style.display = '';
+      });
+      profile.appendChild(back);
+
+      PROFILE_COLS.forEach(col => {
+        const val = row[col];
+        if (!val) return;
+        const field = document.createElement('div');
+        field.className = 'profile-field';
+        field.innerHTML = '<div class="profile-label">' + col.toUpperCase() + '</div><div class="profile-value">' + val + '</div>';
+        profile.appendChild(field);
+      });
     }
 
     function updateMenuDividers() {
