@@ -10,51 +10,39 @@ export default async function handler(req, res) {
 
     let headerRow = -1;
     for (let i = 0; i < lines.length; i++) {
-      if (lines[i].some(c => c.trim().toLowerCase() === 'service')) {
+      if (lines[i].filter(c => c.trim() !== '').length >= 2) {
         headerRow = i;
         break;
       }
     }
     if (headerRow === -1) {
-      return res.status(200).json({ lastUpdated: '', rows: [] });
+      return res.status(200).json({ lastUpdated: '', columns: [], rows: [] });
     }
 
-    const headers = lines[headerRow].map(h => h.trim().toLowerCase());
-    const typeIdx = headers.indexOf('service');
-    const nameIdx = headers.indexOf('name');
-    const dateIdx = headers.indexOf('date uploaded');
-    const phoneIdx = headers.indexOf('phone');
-    const emailIdx = headers.indexOf('email');
-    const descIdx = headers.indexOf('site');
-    const boardIdx = headers.indexOf('board');
-
+    const columns = lines[headerRow].map(h => h.trim().toLowerCase()).filter(h => h !== '');
     let lastUpdated = '';
     const rows = [];
 
     for (let i = headerRow + 1; i < lines.length; i++) {
       const cols = lines[i];
-      if (cols.length < 2) continue;
+      if (cols.length < 2 || cols.every(c => c.trim() === '')) continue;
 
-      const rawDate = (cols[dateIdx] || '').trim();
-
-      if (rawDate && isMoreRecent(rawDate, lastUpdated)) {
-        lastUpdated = rawDate;
+      const row = {};
+      for (let j = 0; j < columns.length; j++) {
+        row[columns[j]] = (cols[j] || '').trim();
       }
 
-      rows.push({
-        type: (cols[typeIdx] || '').trim(),
-        name: (cols[nameIdx] || '').trim(),
-        phone: (cols[phoneIdx] || '').trim(),
-        email: (cols[emailIdx] || '').trim(),
-        description: (cols[descIdx] || '').trim(),
-        board: (cols[boardIdx] || '').trim(),
-        date: rawDate
-      });
+      const dateVal = row['date uploaded'] || row['date'] || '';
+      if (dateVal && isMoreRecent(dateVal, lastUpdated)) {
+        lastUpdated = dateVal;
+      }
+
+      rows.push(row);
     }
 
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
-    return res.status(200).json({ lastUpdated, rows });
+    res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=120');
+    return res.status(200).json({ lastUpdated, columns, rows });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
@@ -100,31 +88,6 @@ function parseCSV(text) {
   if (current.some(c => c.trim() !== '')) rows.push(current);
 
   return rows;
-}
-
-function splitContact(contact) {
-  let phone = '';
-  let email = '';
-
-  const emailMatch = contact.match(/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/);
-  if (emailMatch) {
-    email = emailMatch[0];
-  }
-
-  const phoneMatch = contact.match(/[\d().\-+\s]{7,}/);
-  if (phoneMatch) {
-    phone = phoneMatch[0].trim();
-  }
-
-  if (!phone && !email) {
-    if (contact.includes('@')) {
-      email = contact;
-    } else if (/\d/.test(contact)) {
-      phone = contact;
-    }
-  }
-
-  return { phone, email };
 }
 
 function isMoreRecent(dateA, dateB) {

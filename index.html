@@ -94,10 +94,6 @@
       border-bottom: 1px solid #000;
     }
 
-    td.desc {
-      max-width: 320px;
-    }
-
     .loading {
       padding: 40px 0;
       font-size: 16px;
@@ -133,31 +129,24 @@
   <div class="table-wrapper">
     <div class="loading" id="loading">LOADING...</div>
     <table id="table" style="display:none">
-      <thead>
-        <tr>
-          <th data-col="type">SERVICE<span class="sort-arrow"></span></th>
-          <th data-col="name">NAME<span class="sort-arrow"></span></th>
-          <th data-col="phone" class="hide-mobile">PHONE<span class="sort-arrow"></span></th>
-          <th data-col="email" class="hide-mobile">EMAIL<span class="sort-arrow"></span></th>
-          <th data-col="description">SITE<span class="sort-arrow"></span></th>
-          <th data-col="board" class="hide-mobile">BOARD<span class="sort-arrow"></span></th>
-          <th data-col="date" class="hide-mobile">DATE UPLOADED<span class="sort-arrow"></span></th>
-        </tr>
-      </thead>
+      <thead><tr id="thead"></tr></thead>
       <tbody id="tbody"></tbody>
     </table>
   </div>
 
   <script>
     let rows = [];
+    let columns = [];
     let sortCol = null;
     let sortAsc = true;
+    const MOBILE_COLS = 3;
 
     async function load() {
       try {
         const res = await fetch('/api/data');
         const data = await res.json();
         rows = data.rows || [];
+        columns = data.columns || [];
 
         if (data.lastUpdated) {
           const d = new Date(data.lastUpdated);
@@ -170,12 +159,35 @@
           }
         }
 
+        buildHead();
         render();
         document.getElementById('loading').style.display = 'none';
         document.getElementById('table').style.display = 'table';
       } catch (e) {
         document.getElementById('loading').textContent = 'FAILED TO LOAD DATA';
       }
+    }
+
+    function buildHead() {
+      const thead = document.getElementById('thead');
+      thead.innerHTML = '';
+      columns.forEach((col, i) => {
+        const th = document.createElement('th');
+        th.dataset.col = col;
+        th.textContent = col.toUpperCase();
+        const arrow = document.createElement('span');
+        arrow.className = 'sort-arrow';
+        th.appendChild(arrow);
+        if (i >= MOBILE_COLS) th.classList.add('hide-mobile');
+        th.addEventListener('click', () => {
+          if (sortCol === col) { sortAsc = !sortAsc; }
+          else { sortCol = col; sortAsc = true; }
+          document.querySelectorAll('.sort-arrow').forEach(s => s.textContent = '');
+          arrow.textContent = sortAsc ? ' \u25B2' : ' \u25BC';
+          render();
+        });
+        thead.appendChild(th);
+      });
     }
 
     function render() {
@@ -187,10 +199,10 @@
         sorted.sort((a, b) => {
           let va = (a[sortCol] || '').toLowerCase();
           let vb = (b[sortCol] || '').toLowerCase();
-          if (sortCol === 'date') {
-            va = new Date(a.date) || 0;
-            vb = new Date(b.date) || 0;
-            return sortAsc ? va - vb : vb - va;
+          if (sortCol.includes('date')) {
+            const da = new Date(a[sortCol]);
+            const db = new Date(b[sortCol]);
+            if (!isNaN(da) && !isNaN(db)) return sortAsc ? da - db : db - da;
           }
           if (va < vb) return sortAsc ? -1 : 1;
           if (va > vb) return sortAsc ? 1 : -1;
@@ -200,53 +212,30 @@
 
       for (const row of sorted) {
         const tr = document.createElement('tr');
-        for (const col of ['type','name','phone','email','description','board','date']) {
+        columns.forEach((col, i) => {
           const td = document.createElement('td');
           td.textContent = row[col] || '';
-          if (col === 'description') td.classList.add('desc');
-          if (['phone','email','board','date'].includes(col)) td.classList.add('hide-mobile');
+          if (i >= MOBILE_COLS) td.classList.add('hide-mobile');
           tr.appendChild(td);
-        }
+        });
         tbody.appendChild(tr);
 
-        const expandTr = document.createElement('tr');
-        expandTr.className = 'expand-row';
-        const expandTd = document.createElement('td');
-        expandTd.colSpan = 3;
-        const details = [
-          ['PHONE', row.phone],
-          ['EMAIL', row.email],
-          ['BOARD', row.board],
-          ['DATE', row.date]
-        ].filter(d => d[1]);
-        expandTd.innerHTML = details.map(d =>
-          '<div class="expand-item"><span class="expand-label">' + d[0] + '</span><br>' + d[1] + '</div>'
-        ).join('');
-        expandTr.appendChild(expandTd);
-        tbody.appendChild(expandTr);
-
-        tr.addEventListener('click', () => {
-          expandTr.classList.toggle('open');
-        });
+        const hiddenCols = columns.slice(MOBILE_COLS);
+        if (hiddenCols.length > 0) {
+          const expandTr = document.createElement('tr');
+          expandTr.className = 'expand-row';
+          const expandTd = document.createElement('td');
+          expandTd.colSpan = MOBILE_COLS;
+          expandTd.innerHTML = hiddenCols
+            .filter(col => row[col])
+            .map(col => '<div class="expand-item"><span class="expand-label">' + col.toUpperCase() + '</span><br>' + row[col] + '</div>')
+            .join('');
+          expandTr.appendChild(expandTd);
+          tbody.appendChild(expandTr);
+          tr.addEventListener('click', () => expandTr.classList.toggle('open'));
+        }
       }
     }
-
-    document.querySelectorAll('th[data-col]').forEach(th => {
-      th.addEventListener('click', () => {
-        const col = th.dataset.col;
-        if (sortCol === col) {
-          sortAsc = !sortAsc;
-        } else {
-          sortCol = col;
-          sortAsc = true;
-        }
-
-        document.querySelectorAll('.sort-arrow').forEach(s => s.textContent = '');
-        th.querySelector('.sort-arrow').textContent = sortAsc ? ' ▲' : ' ▼';
-
-        render();
-      });
-    });
 
     load();
   </script>
