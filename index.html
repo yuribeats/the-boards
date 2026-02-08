@@ -1,4 +1,4 @@
-<!DOCSERVICE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -107,10 +107,9 @@
     @media (max-width: 768px) {
       body { padding: 12px; }
       h1 { font-size: 28px; }
-      .header { margin: -12px -12px 16px -12px; padding: 32px 12px; }
-      table { font-size: 11px; min-width: 600px; }
+      table { font-size: 11px; }
       th, td { padding: 8px 6px; }
-      td.desc { max-width: 200px; }
+      .hide-mobile { display: none; }
     }
   </style>
 </head>
@@ -126,11 +125,12 @@
       <thead>
         <tr>
           <th data-col="type">SERVICE<span class="sort-arrow"></span></th>
-          <th data-col="phone">PHONE<span class="sort-arrow"></span></th>
-          <th data-col="email">EMAIL<span class="sort-arrow"></span></th>
+          <th data-col="name">NAME<span class="sort-arrow"></span></th>
+          <th data-col="phone" class="hide-mobile">PHONE<span class="sort-arrow"></span></th>
+          <th data-col="email" class="hide-mobile">EMAIL<span class="sort-arrow"></span></th>
           <th data-col="description">SITE<span class="sort-arrow"></span></th>
-          <th data-col="board">BOARD<span class="sort-arrow"></span></th>
-          <th data-col="date">DATE UPLOADED<span class="sort-arrow"></span></th>
+          <th data-col="board" class="hide-mobile">BOARD<span class="sort-arrow"></span></th>
+          <th data-col="date" class="hide-mobile">DATE UPLOADED<span class="sort-arrow"></span></th>
         </tr>
       </thead>
       <tbody id="tbody"></tbody>
@@ -189,10 +189,11 @@
 
       for (const row of sorted) {
         const tr = document.createElement('tr');
-        for (const col of ['type','phone','email','description','board','date']) {
+        for (const col of ['type','name','phone','email','description','board','date']) {
           const td = document.createElement('td');
           td.textContent = row[col] || '';
-          if (col === 'description') td.className = 'desc';
+          if (col === 'description') td.classList.add('desc');
+          if (['phone','email','board','date'].includes(col)) td.classList.add('hide-mobile');
           tr.appendChild(td);
         }
         tbody.appendChild(tr);

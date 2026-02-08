@@ -21,6 +21,7 @@ export default async function handler(req, res) {
 
     const headers = lines[headerRow].map(h => h.trim().toLowerCase());
     const typeIdx = headers.indexOf('service');
+    const nameIdx = headers.indexOf('name');
     const dateIdx = headers.indexOf('date uploaded');
     const phoneIdx = headers.indexOf('phone');
     const emailIdx = headers.indexOf('email');
@@ -42,6 +43,7 @@ export default async function handler(req, res) {
 
       rows.push({
         type: (cols[typeIdx] || '').trim(),
+        name: (cols[nameIdx] || '').trim(),
         phone: (cols[phoneIdx] || '').trim(),
         email: (cols[emailIdx] || '').trim(),
         description: (cols[descIdx] || '').trim(),
