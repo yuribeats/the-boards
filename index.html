@@ -100,6 +100,65 @@
       font-weight: 900;
     }
 
+    .burger {
+      position: absolute;
+      top: 24px;
+      left: 24px;
+      cursor: pointer;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .burger span {
+      display: block;
+      width: 28px;
+      height: 3px;
+      background: #000;
+    }
+
+    .menu-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255,255,255,0.95);
+      z-index: 99;
+      padding: 80px 24px;
+    }
+    .menu-overlay.open { display: block; }
+    .menu-overlay a {
+      display: block;
+      font-size: 24px;
+      font-weight: 900;
+      color: #000;
+      text-decoration: none;
+      margin-bottom: 24px;
+    }
+    .menu-overlay a:hover { text-decoration: underline; }
+
+    .image-feed {
+      display: none;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    .image-feed.active { display: block; }
+    .image-card {
+      margin-bottom: 24px;
+      border-bottom: 2px solid #000;
+      padding-bottom: 16px;
+    }
+    .image-card img {
+      width: 100%;
+      display: block;
+      margin-bottom: 8px;
+    }
+    .image-card .image-info {
+      font-size: 12px;
+    }
+
     .expand-row { display: none; }
     .expand-row td {
       padding: 8px 12px 16px;
@@ -112,6 +171,7 @@
     @media (max-width: 768px) {
       body { padding: 12px; }
       h1 { font-size: 28px; }
+      .burger { top: 12px; left: 12px; }
       table { font-size: 11px; }
       th, td { padding: 8px 6px; }
       .hide-mobile { display: none; }
@@ -121,12 +181,20 @@
   </style>
 </head>
 <body>
+  <div class="burger" id="burger" onclick="toggleMenu()">
+    <span></span><span></span><span></span>
+  </div>
+  <div class="menu-overlay" id="menu">
+    <a href="javascript:void(0)" onclick="switchMode('image')">IMAGE MODE</a>
+    <a href="javascript:void(0)" onclick="switchMode('table')">TABLE MODE</a>
+  </div>
   <div class="header">
     <h1>THE BOARDS</h1>
     <div class="last-updated" id="lastUpdated">LAST UPDATED: FEBRUARY 8, 2026</div>
   </div>
   <hr class="separator">
-  <div class="table-wrapper">
+  <div class="image-feed" id="imageFeed"></div>
+  <div class="table-wrapper" id="tableWrapper">
     <div class="loading" id="loading">LOADING...</div>
     <table id="table" style="display:none">
       <thead><tr id="thead"></tr></thead>
@@ -234,6 +302,53 @@
           tbody.appendChild(expandTr);
           tr.addEventListener('click', () => expandTr.classList.toggle('open'));
         }
+      }
+    }
+
+    function toggleMenu() {
+      document.getElementById('menu').classList.toggle('open');
+    }
+
+    function switchMode(mode) {
+      document.getElementById('menu').classList.remove('open');
+      if (mode === 'image') {
+        document.getElementById('tableWrapper').style.display = 'none';
+        document.querySelector('.separator').style.display = 'none';
+        const feed = document.getElementById('imageFeed');
+        feed.classList.add('active');
+        feed.innerHTML = '';
+
+        const sorted = [...rows]
+          .filter(r => r['image'])
+          .sort((a, b) => {
+            const da = new Date(a['date uploaded'] || a['date'] || 0);
+            const db = new Date(b['date uploaded'] || b['date'] || 0);
+            return db - da;
+          });
+
+        if (sorted.length === 0) {
+          feed.innerHTML = '<div class="loading">NO IMAGES</div>';
+          return;
+        }
+
+        for (const row of sorted) {
+          const card = document.createElement('div');
+          card.className = 'image-card';
+          const img = document.createElement('img');
+          img.src = row['image'];
+          img.alt = row['service'] || row['name'] || '';
+          card.appendChild(img);
+          const info = document.createElement('div');
+          info.className = 'image-info';
+          const parts = [row['service'], row['name'], row['date uploaded'] || row['date']].filter(Boolean);
+          info.textContent = parts.join(' \u2014 ');
+          card.appendChild(info);
+          feed.appendChild(card);
+        }
+      } else {
+        document.getElementById('imageFeed').classList.remove('active');
+        document.querySelector('.separator').style.display = '';
+        document.getElementById('tableWrapper').style.display = '';
       }
     }
 
