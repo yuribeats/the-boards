@@ -159,6 +159,12 @@
       font-size: 12px;
     }
 
+    .mode-label {
+      font-size: 14px;
+      font-weight: 900;
+      padding: 10px 12px;
+    }
+
     .expand-row { display: none; }
     .expand-row td {
       padding: 8px 12px 16px;
@@ -193,6 +199,8 @@
     <div class="last-updated" id="lastUpdated">LAST UPDATED: FEBRUARY 8, 2026</div>
   </div>
   <hr class="separator">
+  <div class="mode-label" id="modeLabel" style="display:none"></div>
+  <hr class="separator" id="separator2" style="display:none">
   <div class="image-feed" id="imageFeed"></div>
   <div class="table-wrapper" id="tableWrapper">
     <div class="loading" id="loading">LOADING...</div>
@@ -309,11 +317,13 @@
       document.getElementById('menu').classList.toggle('open');
     }
 
-    function switchMode(mode) {
+    async function switchMode(mode) {
       document.getElementById('menu').classList.remove('open');
       if (mode === 'image') {
         document.getElementById('tableWrapper').style.display = 'none';
-        document.querySelector('.separator').style.display = 'none';
+        document.getElementById('modeLabel').textContent = 'IMAGE MODE';
+        document.getElementById('modeLabel').style.display = '';
+        document.getElementById('separator2').style.display = '';
         const feed = document.getElementById('imageFeed');
         feed.classList.add('active');
         feed.innerHTML = '';
@@ -339,7 +349,8 @@
         }
       } else {
         document.getElementById('imageFeed').classList.remove('active');
-        document.querySelector('.separator').style.display = '';
+        document.getElementById('modeLabel').style.display = 'none';
+        document.getElementById('separator2').style.display = 'none';
         document.getElementById('tableWrapper').style.display = '';
       }
     }
