@@ -61,7 +61,10 @@
       right: 24px;
       font-size: 11px;
       font-weight: 900;
+      text-align: right;
     }
+    .last-updated-corner .lu-date { display: block; }
+    .last-updated-corner .lu-label::after { content: none; }
 
     .separator {
       border: none;
@@ -417,6 +420,8 @@
         text-align: center;
         margin-top: 8px;
       }
+      .last-updated-corner .lu-date { display: inline; }
+      .last-updated-corner .lu-label::after { content: ': '; }
     }
   </style>
 </head>
@@ -434,7 +439,7 @@
   <div class="header">
     <h1>THE BOARDS</h1>
     <div class="last-updated">SERVING THE NORTH WESTERN PHILADELPHIA AREA</div>
-    <div class="last-updated-corner" id="lastUpdated">LAST UPDATED: FEBRUARY 8, 2026</div>
+    <div class="last-updated-corner" id="lastUpdated"><span class="lu-label">LAST UPDATED</span><span class="lu-date">FEBRUARY 8, 2026</span></div>
   </div>
   <hr class="separator">
   <div class="mode-label" id="modeLabel" style="display:none"></div>
@@ -516,10 +521,9 @@
           const d = new Date(data.lastUpdated);
           const months = ['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'];
           if (!isNaN(d.getTime())) {
-            document.getElementById('lastUpdated').textContent =
-              'LAST UPDATED: ' + months[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
+            document.querySelector('.lu-date').textContent = months[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
           } else {
-            document.getElementById('lastUpdated').textContent = 'LAST UPDATED: ' + data.lastUpdated.toUpperCase();
+            document.querySelector('.lu-date').textContent = data.lastUpdated.toUpperCase();
           }
         }
 
