@@ -55,6 +55,13 @@
       font-size: 14px;
       font-weight: 900;
     }
+    .last-updated-corner {
+      position: absolute;
+      top: 24px;
+      right: 24px;
+      font-size: 11px;
+      font-weight: 900;
+    }
 
     .separator {
       border: none;
@@ -405,6 +412,11 @@
       .profile-field { margin: 0 -12px; padding-left: 12px; }
       .menu-overlay { top: 44px; left: 12px; }
       .menu-overlay a { font-size: 11px; padding: 10px 6px; }
+      .last-updated-corner {
+        position: static;
+        text-align: center;
+        margin-top: 8px;
+      }
     }
   </style>
 </head>
@@ -419,11 +431,10 @@
     <a href="javascript:void(0)" id="menuAll" onclick="switchMode('table')" style="display:none">ALL</a>
     <a href="javascript:void(0)" id="menuSubmit" onclick="switchMode('submit')" class="menu-divider">SUBMIT</a>
   </div>
+  <div class="last-updated-corner" id="lastUpdated">LAST UPDATED: FEBRUARY 8, 2026</div>
   <div class="header">
     <h1>THE BOARDS</h1>
     <div class="last-updated">SERVING THE NORTH WESTERN PHILADELPHIA AREA</div>
-    <br>
-    <div class="last-updated" id="lastUpdated">LAST UPDATED: FEBRUARY 8, 2026</div>
   </div>
   <hr class="separator">
   <div class="mode-label" id="modeLabel" style="display:none"></div>
