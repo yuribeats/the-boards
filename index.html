@@ -461,6 +461,11 @@
       if (dd.classList.contains('open') && !dd.contains(e.target)) {
         dd.classList.remove('open');
       }
+      const menu = document.getElementById('menu');
+      const burger = document.getElementById('burger');
+      if (menu.classList.contains('open') && !menu.contains(e.target) && !burger.contains(e.target)) {
+        menu.classList.remove('open');
+      }
     });
 
     function render() {
