@@ -799,14 +799,22 @@
       });
     }
 
-    function populateServiceDropdown() {
+    async function populateServiceDropdown() {
       const sel = document.getElementById('fServiceSelect');
       sel.innerHTML = '';
       const opt = document.createElement('option');
       opt.value = '';
       opt.textContent = 'NEW SERVICE';
       sel.appendChild(opt);
-      const services = [...new Set(rows.map(r => (r.service || '').trim()).filter(Boolean))].sort();
+      let data = rows;
+      if (!data.length) {
+        try {
+          const res = await fetch('/api/data');
+          const json = await res.json();
+          data = json.rows || [];
+        } catch {}
+      }
+      const services = [...new Set(data.map(r => (r.service || '').trim()).filter(Boolean))].sort();
       for (const s of services) {
         const o = document.createElement('option');
         o.value = s;
