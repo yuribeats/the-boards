@@ -437,7 +437,7 @@
     <a href="javascript:void(0)" id="menuSubmit" onclick="switchMode('submit')" class="menu-divider">SUBMIT</a>
   </div>
   <div class="header">
-    <h1>THE BOARDS</h1>
+    <h1 style="cursor:pointer" onclick="switchMode('table')">THE BOARDS</h1>
     <div class="last-updated">SERVING THE NORTH WESTERN PHILADELPHIA AREA</div>
     <div class="last-updated-corner" id="lastUpdated"><span class="lu-label">LAST UPDATED</span><span class="lu-date">FEBRUARY 8, 2026</span></div>
   </div>
@@ -744,6 +744,10 @@
 
     async function switchMode(mode) {
       document.getElementById('menu').classList.remove('open');
+      const profile = document.getElementById('profile');
+      profile.classList.remove('active');
+      profile.innerHTML = '';
+      document.querySelector('.separator').style.display = '';
       document.getElementById('menuImage').style.display = mode === 'image' ? 'none' : '';
       document.getElementById('menuTable').style.display = (mode === 'table' && !showStarred) ? 'none' : '';
       document.getElementById('menuStar').style.display = mode === 'starred' ? 'none' : '';
