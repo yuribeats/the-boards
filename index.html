@@ -331,8 +331,10 @@
     <input type="text" id="fPhone" placeholder="PHONE NUMBER">
     <label>EMAIL</label>
     <input type="email" id="fEmail" placeholder="EMAIL ADDRESS">
-    <label>BOARD</label>
-    <input type="text" id="fBoard" placeholder="BOARD NAME">
+    <label>DATE UPLOADED</label>
+    <input type="text" id="fDate" placeholder="" readonly>
+    <label>NEIGHBORHOOD</label>
+    <input type="text" id="fNeighborhood" placeholder="NEIGHBORHOOD">
     <button class="submit-btn" id="submitBtn" onclick="submitListing()">SUBMIT</button>
     <div class="submit-msg" id="submitMsg"></div>
   </div>
@@ -353,7 +355,7 @@
     let showStarred = false;
     let serviceFilter = null;
     const VISIBLE_COLS = ['service', 'name', 'site'];
-    const PROFILE_COLS = ['name', 'site', 'phone', 'email', 'board', 'date uploaded'];
+    const PROFILE_COLS = ['name', 'site', 'phone', 'email', 'date uploaded', 'neighborhood'];
 
     function getStarred() {
       try { return JSON.parse(localStorage.getItem('starred') || '[]'); } catch { return []; }
@@ -591,6 +593,8 @@
         document.getElementById('submitMsg').textContent = '';
         document.getElementById('submitBtn').disabled = false;
         document.getElementById('submitBtn').textContent = 'SUBMIT';
+        const now = new Date();
+        document.getElementById('fDate').value = (now.getMonth()+1) + '/' + now.getDate() + '/' + now.getFullYear();
         updateMenuDividers();
         return;
       }
@@ -677,7 +681,7 @@
             site: document.getElementById('fSite').value.trim(),
             phone: document.getElementById('fPhone').value.trim(),
             email: document.getElementById('fEmail').value.trim(),
-            board: document.getElementById('fBoard').value.trim()
+            neighborhood: document.getElementById('fNeighborhood').value.trim()
           })
         });
         if (!res.ok) throw new Error('Failed');
@@ -688,7 +692,7 @@
         document.getElementById('fSite').value = '';
         document.getElementById('fPhone').value = '';
         document.getElementById('fEmail').value = '';
-        document.getElementById('fBoard').value = '';
+        document.getElementById('fNeighborhood').value = '';
         setTimeout(() => { btn.disabled = false; btn.textContent = 'SUBMIT'; }, 3000);
       } catch (e) {
         msg.textContent = 'SUBMISSION FAILED. TRY AGAIN.';

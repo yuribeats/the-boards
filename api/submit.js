@@ -14,7 +14,7 @@ export default async function handler(req, res) {
   if (!token) return res.status(500).json({ error: 'Server misconfigured' });
 
   try {
-    const { service, name, site, phone, email, board } = req.body;
+    const { service, name, site, phone, email, neighborhood } = req.body;
     if (!service || !name) return res.status(400).json({ error: 'Service and name are required' });
 
     const now = new Date();
@@ -27,8 +27,8 @@ export default async function handler(req, res) {
       site: site || '',
       phone: phone || '',
       email: email || '',
-      board: board || '',
-      'date uploaded': dateUploaded
+      'date uploaded': dateUploaded,
+      neighborhood: neighborhood || ''
     };
 
     const { content, sha } = await getFile(token);
