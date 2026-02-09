@@ -3,6 +3,8 @@ const PENDING_PATH = 'data/pending.json';
 const APPROVED_PATH = 'data/approved.json';
 const PENDING_NEWS_PATH = 'data/pending-news.json';
 const NEWS_PATH = 'data/news.json';
+const PENDING_EVENTS_PATH = 'data/pending-events.json';
+const EVENTS_PATH = 'data/events.json';
 const BRANCH = 'main';
 
 export default async function handler(req, res) {
@@ -29,7 +31,8 @@ export default async function handler(req, res) {
     }
 
     const isNews = type === 'news';
-    const pendingPath = isNews ? PENDING_NEWS_PATH : PENDING_PATH;
+    const isEvent = type === 'event';
+    const pendingPath = isEvent ? PENDING_EVENTS_PATH : isNews ? PENDING_NEWS_PATH : PENDING_PATH;
 
     let pendingFile;
     try {
@@ -45,7 +48,13 @@ export default async function handler(req, res) {
     pending.splice(idx, 1);
 
     if (action === 'approve') {
-      if (isNews) {
+      if (isEvent) {
+        const eventsFile = await getFile(token, EVENTS_PATH).catch(() => ({ content: '[]', sha: null }));
+        const events = JSON.parse(eventsFile.content);
+        const eventItem = { id: submission.id, event: submission.event || '', shortName: submission.shortName || '', date: submission.date || '', location: submission.location || '', contact: submission.contact || '', site: submission.site || '', image: submission.image || '' };
+        events.push(eventItem);
+        await putFile(token, EVENTS_PATH, events, eventsFile.sha, 'Update events.json');
+      } else if (isNews) {
         const newsFile = await getFile(token, NEWS_PATH).catch(() => ({ content: '[]', sha: null }));
         const news = JSON.parse(newsFile.content);
         const newsItem = { id: submission.id, title: submission.title || '', body: submission.body || '', date: submission.date || '', image: submission.image || '' };

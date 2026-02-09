@@ -1,6 +1,7 @@
 const REPO = 'yuribeats/the-boards';
 const FILE_PATH = 'data/pending.json';
 const NEWS_FILE_PATH = 'data/pending-news.json';
+const EVENTS_FILE_PATH = 'data/pending-events.json';
 const BRANCH = 'main';
 
 export default async function handler(req, res) {
@@ -40,8 +41,17 @@ export default async function handler(req, res) {
       }
     } catch {}
 
+    let pendingEvents = [];
+    try {
+      const resp = await fetch(`https://api.github.com/repos/${REPO}/contents/${EVENTS_FILE_PATH}?ref=${BRANCH}`, { headers });
+      if (resp.ok) {
+        const data = await resp.json();
+        pendingEvents = JSON.parse(Buffer.from(data.content, 'base64').toString('utf8'));
+      }
+    } catch {}
+
     res.setHeader('Cache-Control', 'no-cache');
-    return res.status(200).json({ pending, pendingNews });
+    return res.status(200).json({ pending, pendingNews, pendingEvents });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
