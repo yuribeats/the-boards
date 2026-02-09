@@ -186,6 +186,8 @@
       <h1>MAKE A POST</h1>
       <hr class="separator">
       <div class="post-form">
+        <label>AUTHOR</label>
+        <input type="text" id="postAuthor" placeholder="AUTHOR NAME">
         <label>TITLE</label>
         <input type="text" id="postTitle" placeholder="POST TITLE">
         <label>BODY</label>
@@ -360,7 +362,8 @@
       msg.textContent = 'POSTING...';
 
       try {
-        const payload = { title, body };
+        const author = document.getElementById('postAuthor').value.trim();
+        const payload = { author, title, body };
         const fileInput = document.getElementById('postFile');
         if (fileInput.files && fileInput.files[0]) {
           const file = fileInput.files[0];
@@ -376,6 +379,7 @@
           body: JSON.stringify(payload)
         });
         if (!res.ok) throw new Error('Failed');
+        document.getElementById('postAuthor').value = '';
         document.getElementById('postTitle').value = '';
         document.getElementById('postBody').value = '';
         document.getElementById('postFile').value = '';

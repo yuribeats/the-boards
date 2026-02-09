@@ -48,7 +48,10 @@ export default async function handler(req, res) {
       if (isNews) {
         const newsFile = await getFile(token, NEWS_PATH).catch(() => ({ content: '[]', sha: null }));
         const news = JSON.parse(newsFile.content);
-        news.push({ id: submission.id, title: submission.title || '', body: submission.body || '', date: submission.date || '', image: submission.image || '' });
+        const newsItem = { id: submission.id, title: submission.title || '', body: submission.body || '', date: submission.date || '', image: submission.image || '' };
+        if (submission.author) newsItem.author = submission.author;
+        if (submission.source) newsItem.source = submission.source;
+        news.push(newsItem);
         await putFile(token, NEWS_PATH, news, newsFile.sha, 'Update news.json');
       } else {
         const approvedFile = await getFile(token, APPROVED_PATH);

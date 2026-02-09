@@ -14,7 +14,7 @@ export default async function handler(req, res) {
   if (!token) return res.status(500).json({ error: 'Server misconfigured' });
 
   try {
-    const { title, body, image, imageExt } = req.body;
+    const { author, title, body, image, imageExt } = req.body;
     if (!body) return res.status(400).json({ error: 'Body is required' });
 
     const now = new Date();
@@ -24,6 +24,8 @@ export default async function handler(req, res) {
     const submission = {
       id,
       type: 'news',
+      source: 'community',
+      author: author || '',
       title: title || '',
       body: body || '',
       date: dateStr

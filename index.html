@@ -85,11 +85,12 @@
     }
     td:nth-child(2), th:nth-child(2),
     td:nth-child(3), th:nth-child(3),
-    td:nth-child(4), th:nth-child(4) {
+    td:nth-child(4), th:nth-child(4),
+    td:nth-child(5), th:nth-child(5) {
       width: 1%;
       white-space: nowrap;
     }
-    td:nth-child(5), th:nth-child(5) {
+    td:nth-child(6), th:nth-child(6) {
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -513,6 +514,8 @@
     <div class="submit-msg" id="submitMsg"></div>
   </div>
   <div class="submit-form" id="newsSubmitForm">
+    <label>AUTHOR</label>
+    <input type="text" id="nAuthor" placeholder="YOUR NAME">
     <label>TITLE</label>
     <input type="text" id="nTitle" placeholder="NEWS TITLE">
     <label>BODY</label>
@@ -542,13 +545,13 @@
   <script>
     let rows = [];
     let columns = [];
-    let sortCol = null;
-    let sortAsc = true;
+    let sortCol = 'date uploaded';
+    let sortAsc = false;
     let showStarred = false;
     let serviceFilter = null;
-    const VISIBLE_COLS = ['service', 'name', 'site', 'description'];
+    const VISIBLE_COLS = ['service', 'name', 'site', 'date uploaded', 'description'];
     const PROFILE_COLS = ['name', 'service', 'description', 'site', 'phone', 'email', 'date uploaded', 'neighborhood'];
-    const COL_DISPLAY = { 'service': 'SERVICE TYPE' };
+    const COL_DISPLAY = { 'service': 'SERVICE TYPE', 'date uploaded': 'DATE ADDED' };
 
     function getStarred() {
       try { return JSON.parse(localStorage.getItem('starred') || '[]'); } catch { return []; }
@@ -604,6 +607,7 @@
         th.textContent = COL_DISPLAY[col] || col.toUpperCase();
         const arrow = document.createElement('span');
         arrow.className = 'sort-arrow';
+        if (col === sortCol) arrow.textContent = sortAsc ? ' \u25B2' : ' \u25BC';
         th.appendChild(arrow);
         if (col === 'service') {
           th.addEventListener('click', (e) => {
@@ -862,8 +866,9 @@
               div.className = 'news-post';
               div.innerHTML = (p.image ? '<img style="width:100%;display:block;margin-bottom:8px" src="https://raw.githubusercontent.com/yuribeats/the-boards/main/data/images/' + escapeHtml(p.image) + '" alt="">' : '') +
                 (p.title ? '<div class="news-post-title">' + parseLinks(p.title) + '</div>' : '') +
-                '<div class="news-post-date">' + escapeHtml(p.date) + '</div>' +
-                '<div class="news-post-body">' + parseLinks(p.body) + '</div>';
+                '<div class="news-post-date">' + escapeHtml(p.date) + (p.author ? ' &mdash; ' + escapeHtml(p.author) : '') + '</div>' +
+                '<div class="news-post-body">' + parseLinks(p.body) + '</div>' +
+                (p.source === 'community' ? '<div style="font-size:11px;opacity:0.5;margin-top:8px">SUBMITTED BY COMMUNITY</div>' : '');
               feed.appendChild(div);
             }
           }
@@ -1084,6 +1089,7 @@
 
       try {
         const payload = {
+          author: document.getElementById('nAuthor').value.trim(),
           title: document.getElementById('nTitle').value.trim(),
           body
         };
@@ -1101,6 +1107,7 @@
           body: JSON.stringify(payload)
         });
         if (!res.ok) throw new Error('Failed');
+        document.getElementById('nAuthor').value = '';
         document.getElementById('nTitle').value = '';
         document.getElementById('nBody').value = '';
         document.getElementById('nImage').value = '';
