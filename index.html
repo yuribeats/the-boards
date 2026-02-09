@@ -184,7 +184,6 @@
       border-top: 2px solid #000;
     }
     .menu-overlay a:hover { background: #000; color: #fff; }
-    #submitMenu.open { border-left: none; }
 
     .news-feed {
       display: none;
@@ -683,8 +682,8 @@
         return;
       }
       const rect = anchor.getBoundingClientRect();
-      sm.style.left = (rect.right) + 'px';
-      sm.style.top = (rect.top - 2) + 'px';
+      sm.style.left = (rect.right + 2) + 'px';
+      sm.style.top = rect.top + 'px';
       sm.classList.add('open');
     }
 
