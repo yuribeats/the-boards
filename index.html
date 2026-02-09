@@ -355,6 +355,8 @@
       justify-content: center;
     }
     .custom-check-box.checked { background: #000; color: #fff; font-family: Arial, Helvetica, sans-serif; font-size: 18px; font-weight: 900; line-height: 28px; text-align: center; }
+    .custom-check-box.small { width: 14px; height: 14px; min-width: 14px; }
+    .custom-check-box.small.checked { font-size: 10px; line-height: 14px; }
     .profile-image {
       width: 100%;
       max-width: 500px;
@@ -693,17 +695,17 @@
     <label for="eImage" class="file-upload-label" id="eImageLabel">CHOOSE IMAGE</label>
     <label>REPEATING</label>
     <div style="display:flex;gap:16px">
-      <div class="custom-check" style="margin-top:0;flex:1" onclick="var b=document.getElementById('eRepeatWeekly');b.classList.toggle('checked');b.textContent=b.classList.contains('checked')?'X':''">
-        <div class="custom-check-box" id="eRepeatWeekly"></div>
+      <div class="custom-check" style="margin-top:0;flex:1;align-items:center" onclick="var b=document.getElementById('eRepeatWeekly');b.classList.toggle('checked');b.textContent=b.classList.contains('checked')?'X':''">
+        <div class="custom-check-box small" id="eRepeatWeekly"></div>
         <span>WEEKLY</span>
       </div>
-      <div class="custom-check" style="margin-top:0;flex:1" onclick="var b=document.getElementById('eRepeatMonthly');b.classList.toggle('checked');b.textContent=b.classList.contains('checked')?'X':''">
-        <div class="custom-check-box" id="eRepeatMonthly"></div>
+      <div class="custom-check" style="margin-top:0;flex:1;align-items:center" onclick="var b=document.getElementById('eRepeatMonthly');b.classList.toggle('checked');b.textContent=b.classList.contains('checked')?'X':''">
+        <div class="custom-check-box small" id="eRepeatMonthly"></div>
         <span>MONTHLY</span>
       </div>
     </div>
-    <div class="custom-check" onclick="var b=document.getElementById('ePublishNews');b.classList.toggle('checked');b.textContent=b.classList.contains('checked')?'X':''">
-      <div class="custom-check-box" id="ePublishNews"></div>
+    <div class="custom-check" style="align-items:center" onclick="var b=document.getElementById('ePublishNews');b.classList.toggle('checked');b.textContent=b.classList.contains('checked')?'X':''">
+      <div class="custom-check-box small" id="ePublishNews"></div>
       <span>PUBLISH TO NEWS FEED</span>
     </div>
     <div class="custom-check" onclick="var b=document.getElementById('eVerify');b.classList.toggle('checked');b.textContent=b.classList.contains('checked')?'X':''">
