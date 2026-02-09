@@ -51,7 +51,7 @@ export default async function handler(req, res) {
       if (isEvent) {
         const eventsFile = await getFile(token, EVENTS_PATH).catch(() => ({ content: '[]', sha: null }));
         const events = JSON.parse(eventsFile.content);
-        const eventItem = { id: submission.id, event: submission.event || '', shortName: submission.shortName || '', date: submission.date || '', location: submission.location || '', contact: submission.contact || '', site: submission.site || '', image: submission.image || '' };
+        const eventItem = { id: submission.id, event: submission.event || '', shortName: submission.shortName || '', date: submission.date || '', location: submission.location || '', contact: submission.contact || '', site: submission.site || '', image: submission.image || '', repeatWeekly: !!submission.repeatWeekly, repeatMonthly: !!submission.repeatMonthly };
         events.push(eventItem);
         await putFile(token, EVENTS_PATH, events, eventsFile.sha, 'Update events.json');
 

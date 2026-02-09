@@ -691,6 +691,17 @@
     <label>IMAGE</label>
     <input type="file" id="eImage" class="file-upload-input" accept="image/*" onchange="handleEventFileSelect(this)">
     <label for="eImage" class="file-upload-label" id="eImageLabel">CHOOSE IMAGE</label>
+    <label>REPEATING</label>
+    <div style="display:flex;gap:16px">
+      <div class="custom-check" style="margin-top:0;flex:1" onclick="var b=document.getElementById('eRepeatWeekly');b.classList.toggle('checked');b.textContent=b.classList.contains('checked')?'X':''">
+        <div class="custom-check-box" id="eRepeatWeekly"></div>
+        <span>WEEKLY</span>
+      </div>
+      <div class="custom-check" style="margin-top:0;flex:1" onclick="var b=document.getElementById('eRepeatMonthly');b.classList.toggle('checked');b.textContent=b.classList.contains('checked')?'X':''">
+        <div class="custom-check-box" id="eRepeatMonthly"></div>
+        <span>MONTHLY</span>
+      </div>
+    </div>
     <div class="custom-check" onclick="var b=document.getElementById('ePublishNews');b.classList.toggle('checked');b.textContent=b.classList.contains('checked')?'X':''">
       <div class="custom-check-box" id="ePublishNews"></div>
       <span>PUBLISH TO NEWS FEED</span>
@@ -1423,22 +1434,81 @@
       renderCalendar();
     }
 
+    function calMonthKey(y, m) { return y * 12 + m; }
+
     function calendarPrev() {
-      calendarMonth--;
-      if (calendarMonth < 0) { calendarMonth = 11; calendarYear--; }
+      const now = new Date();
+      const minKey = calMonthKey(now.getFullYear(), now.getMonth()) - 2;
+      let prevM = calendarMonth - 1, prevY = calendarYear;
+      if (prevM < 0) { prevM = 11; prevY--; }
+      if (calMonthKey(prevY, prevM) < minKey) return;
+      calendarMonth = prevM;
+      calendarYear = prevY;
       renderCalendar();
     }
 
     function calendarNext() {
-      calendarMonth++;
-      if (calendarMonth > 11) { calendarMonth = 0; calendarYear++; }
+      const now = new Date();
+      const maxKey = calMonthKey(now.getFullYear(), now.getMonth()) + 2;
+      let nextM = calendarMonth + 1, nextY = calendarYear;
+      if (nextM > 11) { nextM = 0; nextY++; }
+      if (calMonthKey(nextY, nextM) > maxKey) return;
+      calendarMonth = nextM;
+      calendarYear = nextY;
       renderCalendar();
+    }
+
+    function getEventOccurrences(ev, viewMonth, viewYear) {
+      if (!ev.date) return [];
+      const parts = ev.date.split('/');
+      if (parts.length !== 3) return [];
+      const eMonth = parseInt(parts[0]) - 1;
+      const eDay = parseInt(parts[1]);
+      const eYear = parseInt(parts[2]);
+      const origDate = new Date(eYear, eMonth, eDay);
+      const weekday = origDate.getDay();
+      const daysInView = new Date(viewYear, viewMonth + 1, 0).getDate();
+      const days = [];
+
+      const isOrigMonth = viewMonth === eMonth && viewYear === eYear;
+      let nextM = eMonth + 1, nextY = eYear;
+      if (nextM > 11) { nextM = 0; nextY++; }
+      const isNextMonth = viewMonth === nextM && viewYear === nextY;
+
+      if (isOrigMonth) {
+        days.push(eDay);
+        if (ev.repeatWeekly) {
+          let d = eDay + 7;
+          while (d <= daysInView) { days.push(d); d += 7; }
+        }
+      } else if (isNextMonth && ev.repeatMonthly) {
+        if (ev.repeatWeekly) {
+          let d = 1;
+          while (d <= daysInView && new Date(viewYear, viewMonth, d).getDay() !== weekday) d++;
+          while (d <= daysInView) { days.push(d); d += 7; }
+        } else {
+          const nthOccurrence = Math.ceil(eDay / 7);
+          let d = 1;
+          while (d <= daysInView && new Date(viewYear, viewMonth, d).getDay() !== weekday) d++;
+          const target = d + (nthOccurrence - 1) * 7;
+          if (target <= daysInView) days.push(target);
+        }
+      }
+
+      return days;
     }
 
     function renderCalendar() {
       document.getElementById('calendarMonth').textContent = MONTH_NAMES[calendarMonth] + ' ' + calendarYear;
       const grid = document.getElementById('calendarGrid');
       grid.innerHTML = '';
+
+      const now = new Date();
+      const minKey = calMonthKey(now.getFullYear(), now.getMonth()) - 2;
+      const maxKey = calMonthKey(now.getFullYear(), now.getMonth()) + 2;
+      const curKey = calMonthKey(calendarYear, calendarMonth);
+      document.querySelector('.calendar-nav-btn').style.opacity = curKey <= minKey ? '0.3' : '';
+      document.querySelectorAll('.calendar-nav-btn')[1].style.opacity = curKey >= maxKey ? '0.3' : '';
 
       for (const d of DAY_NAMES) {
         const h = document.createElement('div');
@@ -1456,6 +1526,15 @@
         grid.appendChild(cell);
       }
 
+      const dayEventsMap = {};
+      for (const ev of calendarEvents) {
+        const occurrences = getEventOccurrences(ev, calendarMonth, calendarYear);
+        for (const d of occurrences) {
+          if (!dayEventsMap[d]) dayEventsMap[d] = [];
+          dayEventsMap[d].push(ev);
+        }
+      }
+
       for (let day = 1; day <= daysInMonth; day++) {
         const cell = document.createElement('div');
         cell.className = 'calendar-cell';
@@ -1464,17 +1543,7 @@
         num.textContent = day;
         cell.appendChild(num);
 
-        const dateStr = (calendarMonth + 1) + '/' + day + '/' + calendarYear;
-        const dayEvents = calendarEvents.filter(e => {
-          if (!e.date) return false;
-          const parts = e.date.split('/');
-          if (parts.length !== 3) return false;
-          const eMonth = parseInt(parts[0]);
-          const eDay = parseInt(parts[1]);
-          const eYear = parseInt(parts[2]);
-          return eMonth === calendarMonth + 1 && eDay === day && eYear === calendarYear;
-        });
-
+        const dayEvents = dayEventsMap[day] || [];
         for (const ev of dayEvents) {
           const tag = document.createElement('div');
           tag.className = 'calendar-event';
@@ -1521,9 +1590,15 @@
         detail.appendChild(img);
       }
 
+      let repeatLabel = '';
+      if (ev.repeatWeekly && ev.repeatMonthly) repeatLabel = 'WEEKLY + MONTHLY';
+      else if (ev.repeatWeekly) repeatLabel = 'WEEKLY';
+      else if (ev.repeatMonthly) repeatLabel = 'MONTHLY';
+
       const fields = [
         ['EVENT', ev.event],
         ['DATE', ev.date],
+        ['REPEATING', repeatLabel],
         ['LOCATION', ev.location],
         ['CONTACT', ev.contact],
         ['SITE', ev.site]
@@ -1566,6 +1641,19 @@
         return;
       }
 
+      const dateParts = date.split('/');
+      if (dateParts.length !== 3 || !parseInt(dateParts[0]) || !parseInt(dateParts[1]) || !parseInt(dateParts[2])) {
+        msg.textContent = 'DATE MUST BE MM/DD/YYYY';
+        return;
+      }
+      const eventDate = new Date(parseInt(dateParts[2]), parseInt(dateParts[0]) - 1, parseInt(dateParts[1]));
+      const now = new Date();
+      const maxDate = new Date(now.getFullYear(), now.getMonth() + 3, 0);
+      if (eventDate > maxDate) {
+        msg.textContent = 'EVENTS CAN ONLY BE ADDED UP TO TWO MONTHS IN THE FUTURE';
+        return;
+      }
+
       if (!document.getElementById('eVerify').classList.contains('checked')) {
         msg.textContent = 'PLEASE VERIFY THE CHECKBOX';
         return;
@@ -1583,6 +1671,8 @@
           location: document.getElementById('eLocation').value.trim(),
           contact: document.getElementById('eContact').value.trim(),
           site: document.getElementById('eSite').value.trim(),
+          repeatWeekly: document.getElementById('eRepeatWeekly').classList.contains('checked'),
+          repeatMonthly: document.getElementById('eRepeatMonthly').classList.contains('checked'),
           publishToNews: document.getElementById('ePublishNews').classList.contains('checked')
         };
 
@@ -1612,6 +1702,10 @@
         document.getElementById('eVerify').textContent = '';
         document.getElementById('ePublishNews').classList.remove('checked');
         document.getElementById('ePublishNews').textContent = '';
+        document.getElementById('eRepeatWeekly').classList.remove('checked');
+        document.getElementById('eRepeatWeekly').textContent = '';
+        document.getElementById('eRepeatMonthly').classList.remove('checked');
+        document.getElementById('eRepeatMonthly').textContent = '';
         btn.disabled = false;
         btn.textContent = 'SUBMIT';
         document.getElementById('submitModal').classList.add('active');

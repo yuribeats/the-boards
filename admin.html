@@ -292,6 +292,13 @@
           if (item.location) html += '<div class="card-field"><span class="card-label">LOCATION: </span>' + escapeHtml(item.location) + '</div>';
           if (item.contact) html += '<div class="card-field"><span class="card-label">CONTACT: </span>' + escapeHtml(item.contact) + '</div>';
           if (item.site) html += '<div class="card-field"><span class="card-label">SITE: </span>' + escapeHtml(item.site) + '</div>';
+          if (item.repeatWeekly || item.repeatMonthly) {
+            let r = [];
+            if (item.repeatWeekly) r.push('WEEKLY');
+            if (item.repeatMonthly) r.push('MONTHLY');
+            html += '<div class="card-field"><span class="card-label">REPEATING: </span>' + r.join(' + ') + '</div>';
+          }
+          if (item.publishToNews) html += '<div class="card-field"><span class="card-label">PUBLISH TO NEWS: </span>YES</div>';
           html += '<div class="card-actions">';
           html += '<button class="btn" onclick="handleAction(\'' + item.id + '\', \'approve\', this, \'event\')">APPROVE</button>';
           html += '<button class="btn btn-reject" onclick="handleAction(\'' + item.id + '\', \'reject\', this, \'event\')">REJECT</button>';
