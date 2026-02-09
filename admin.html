@@ -171,9 +171,9 @@
       <span></span><span></span><span></span>
     </div>
     <div class="menu-overlay" id="adminMenu">
-      <a href="javascript:void(0)" onclick="showSection('submissions')">SUBMISSIONS</a>
-      <a href="javascript:void(0)" onclick="showSection('post')">MAKE A POST</a>
-      <a href="javascript:void(0)" onclick="showSection('upload')">UPLOAD IMAGE</a>
+      <a href="/admin.html" onclick="event.preventDefault();navigate('submissions')">SUBMISSIONS</a>
+      <a href="/admin.html?s=post" onclick="event.preventDefault();navigate('post')">MAKE A POST</a>
+      <a href="/admin.html?s=upload" onclick="event.preventDefault();navigate('upload')">UPLOAD IMAGE</a>
       <a href="/">SITE</a>
     </div>
 
@@ -226,6 +226,17 @@
       document.getElementById('uploadSection').style.display = section === 'upload' ? '' : 'none';
     }
 
+    function navigate(section) {
+      const params = section === 'submissions' ? '' : '?s=' + section;
+      history.pushState(null, '', '/admin.html' + params);
+      showSection(section);
+    }
+
+    window.addEventListener('popstate', () => {
+      const s = new URLSearchParams(location.search).get('s') || 'submissions';
+      showSection(s);
+    });
+
     document.addEventListener('click', (e) => {
       const menu = document.getElementById('adminMenu');
       const burger = e.target.closest('.burger');
@@ -248,7 +259,9 @@
         }
         document.getElementById('loginView').style.display = 'none';
         document.getElementById('adminView').style.display = '';
-        loadPending();
+        const s = new URLSearchParams(location.search).get('s') || 'submissions';
+        showSection(s);
+        if (s === 'submissions') loadPending();
       } catch (e) {
         document.getElementById('loginError').textContent = 'CONNECTION ERROR';
         document.getElementById('loginError').style.display = '';
