@@ -191,6 +191,9 @@
         <input type="text" id="postTitle" placeholder="POST TITLE">
         <label>BODY</label>
         <textarea id="postBody" placeholder="POST CONTENT"></textarea>
+        <label>IMAGE</label>
+        <input type="file" id="postFile" class="file-upload-input" accept="image/*" onchange="handlePostFile(this)">
+        <label for="postFile" class="file-upload-label" id="postFileLabel">CHOOSE IMAGE</label>
         <button class="btn" style="margin-top:24px;width:100%" onclick="submitPost()">POST</button>
         <div class="post-msg" id="postMsg"></div>
       </div>
@@ -337,21 +340,42 @@
       msg.textContent = 'POSTING...';
 
       try {
+        const payload = { title, body };
+        const fileInput = document.getElementById('postFile');
+        if (fileInput.files && fileInput.files[0]) {
+          const file = fileInput.files[0];
+          payload.image = await readFileAsBase64(file);
+          payload.imageExt = (file.name.split('.').pop().toLowerCase()) || 'jpg';
+        }
         const res = await fetch('/api/post', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'x-admin-password': adminPassword
           },
-          body: JSON.stringify({ title, body })
+          body: JSON.stringify(payload)
         });
         if (!res.ok) throw new Error('Failed');
         document.getElementById('postTitle').value = '';
         document.getElementById('postBody').value = '';
+        document.getElementById('postFile').value = '';
+        document.getElementById('postFileLabel').textContent = 'CHOOSE IMAGE';
+        document.getElementById('postFileLabel').classList.remove('has-file');
         msg.textContent = 'POSTED';
         setTimeout(() => { msg.textContent = ''; }, 2000);
       } catch (e) {
         msg.textContent = 'FAILED TO POST';
+      }
+    }
+
+    function handlePostFile(input) {
+      const label = document.getElementById('postFileLabel');
+      if (input.files && input.files[0]) {
+        label.textContent = input.files[0].name.toUpperCase();
+        label.classList.add('has-file');
+      } else {
+        label.textContent = 'CHOOSE IMAGE';
+        label.classList.remove('has-file');
       }
     }
 

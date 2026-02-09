@@ -827,7 +827,8 @@
             for (const p of posts) {
               const div = document.createElement('div');
               div.className = 'news-post';
-              div.innerHTML = (p.title ? '<div class="news-post-title">' + parseLinks(p.title) + '</div>' : '') +
+              div.innerHTML = (p.image ? '<img style="width:100%;display:block;margin-bottom:8px" src="https://raw.githubusercontent.com/yuribeats/the-boards/main/data/images/' + escapeHtml(p.image) + '" alt="">' : '') +
+                (p.title ? '<div class="news-post-title">' + parseLinks(p.title) + '</div>' : '') +
                 '<div class="news-post-date">' + escapeHtml(p.date) + '</div>' +
                 '<div class="news-post-body">' + parseLinks(p.body) + '</div>';
               feed.appendChild(div);

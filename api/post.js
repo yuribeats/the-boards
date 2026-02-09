@@ -19,18 +19,33 @@ export default async function handler(req, res) {
   if (!token) return res.status(500).json({ error: 'Server misconfigured' });
 
   try {
-    const { title, body } = req.body;
+    const { title, body, image, imageExt } = req.body;
     if (!body) return res.status(400).json({ error: 'Post body is required' });
 
     const now = new Date();
     const dateStr = (now.getMonth() + 1) + '/' + now.getDate() + '/' + now.getFullYear();
+    const id = Date.now().toString();
 
     const post = {
-      id: Date.now().toString(),
+      id,
       title: title || '',
       body: body || '',
       date: dateStr
     };
+
+    if (image && imageExt) {
+      const ext = imageExt.replace(/[^a-z0-9]/gi, '').toLowerCase() || 'jpg';
+      const filename = 'news_' + id + '.' + ext;
+      const imgResp = await fetch(
+        `https://api.github.com/repos/${REPO}/contents/data/images/${filename}`,
+        {
+          method: 'PUT',
+          headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: 'Add news image ' + filename, content: image, branch: BRANCH })
+        }
+      );
+      if (imgResp.ok) post.image = filename;
+    }
 
     let posts = [];
     let sha = null;
