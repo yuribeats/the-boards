@@ -178,6 +178,75 @@
       text-align: center;
     }
 
+    .submit-form {
+      display: none;
+      max-width: 500px;
+      margin: 0 auto;
+      padding: 24px 0;
+    }
+    .submit-form.active { display: block; }
+    .submit-form label {
+      display: block;
+      font-size: 11px;
+      opacity: 0.5;
+      margin-bottom: 4px;
+      margin-top: 16px;
+    }
+    .submit-form label:first-child { margin-top: 0; }
+    .submit-form input {
+      font-family: Arial, Helvetica, sans-serif;
+      font-weight: 900;
+      text-transform: uppercase;
+      font-size: 14px;
+      padding: 10px 12px;
+      border: 2px solid #000;
+      width: 100%;
+    }
+    .submit-form input::placeholder { color: #999; }
+    .submit-btn {
+      font-family: Arial, Helvetica, sans-serif;
+      font-weight: 900;
+      text-transform: uppercase;
+      font-size: 14px;
+      padding: 12px 24px;
+      border: 2px solid #000;
+      background: #000;
+      color: #fff;
+      cursor: pointer;
+      margin-top: 24px;
+      width: 100%;
+    }
+    .submit-btn:hover { background: #fff; color: #000; }
+    .submit-btn:disabled { opacity: 0.5; cursor: default; }
+    .submit-msg {
+      text-align: center;
+      font-size: 14px;
+      margin-top: 16px;
+    }
+
+    .service-dropdown {
+      display: none;
+      position: absolute;
+      background: #fff;
+      border: 2px solid #000;
+      z-index: 50;
+    }
+    .service-dropdown.open { display: inline-block; }
+    .service-dropdown a {
+      display: block;
+      font-size: 14px;
+      font-weight: 900;
+      color: #000;
+      text-decoration: none;
+      text-align: center;
+      padding: 14px 8px;
+      text-transform: uppercase;
+    }
+    .service-dropdown a + a {
+      border-top: 2px solid #000;
+    }
+    .service-dropdown a:hover { background: #000; color: #fff; }
+
     .name-link {
       cursor: pointer;
       text-decoration: underline;
@@ -238,6 +307,8 @@
     <a href="javascript:void(0)" id="menuTable" onclick="switchMode('table')" style="display:none">TABLE MODE</a>
     <a href="javascript:void(0)" id="menuStar" onclick="switchMode('starred')">&#9733;</a>
     <a href="javascript:void(0)" id="menuAll" onclick="switchMode('table')" style="display:none">ALL</a>
+    <a href="javascript:void(0)" id="menuSubmit" onclick="switchMode('submit')" class="menu-divider">SUBMIT</a>
+    <a href="/admin.html" id="menuAdmin" class="menu-divider">ADMIN</a>
   </div>
   <div class="header">
     <h1>THE BOARDS</h1>
@@ -250,6 +321,23 @@
   <hr class="separator" id="separator2" style="display:none">
   <div class="profile" id="profile"></div>
   <div class="image-feed" id="imageFeed"></div>
+  <div class="submit-form" id="submitForm">
+    <label>SERVICE</label>
+    <input type="text" id="fService" placeholder="SERVICE TYPE">
+    <label>NAME</label>
+    <input type="text" id="fName" placeholder="YOUR NAME">
+    <label>SITE</label>
+    <input type="text" id="fSite" placeholder="WEBSITE URL">
+    <label>PHONE</label>
+    <input type="text" id="fPhone" placeholder="PHONE NUMBER">
+    <label>EMAIL</label>
+    <input type="email" id="fEmail" placeholder="EMAIL ADDRESS">
+    <label>BOARD</label>
+    <input type="text" id="fBoard" placeholder="BOARD NAME">
+    <button class="submit-btn" id="submitBtn" onclick="submitListing()">SUBMIT</button>
+    <div class="submit-msg" id="submitMsg"></div>
+  </div>
+  <div class="service-dropdown" id="serviceDropdown"></div>
   <div class="table-wrapper" id="tableWrapper">
     <div class="loading" id="loading">LOADING...</div>
     <table id="table" style="display:none">
@@ -264,6 +352,7 @@
     let sortCol = null;
     let sortAsc = true;
     let showStarred = false;
+    let serviceFilter = null;
     const VISIBLE_COLS = ['service', 'name', 'site'];
     const PROFILE_COLS = ['name', 'site', 'phone', 'email', 'board', 'date uploaded'];
 
@@ -323,16 +412,56 @@
         const arrow = document.createElement('span');
         arrow.className = 'sort-arrow';
         th.appendChild(arrow);
-        th.addEventListener('click', () => {
-          if (sortCol === col) { sortAsc = !sortAsc; }
-          else { sortCol = col; sortAsc = true; }
-          document.querySelectorAll('.sort-arrow').forEach(s => s.textContent = '');
-          arrow.textContent = sortAsc ? ' \u25B2' : ' \u25BC';
-          render();
-        });
+        if (col === 'service') {
+          th.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleServiceDropdown(th);
+          });
+        } else {
+          th.addEventListener('click', () => {
+            if (sortCol === col) { sortAsc = !sortAsc; }
+            else { sortCol = col; sortAsc = true; }
+            document.querySelectorAll('.sort-arrow').forEach(s => s.textContent = '');
+            arrow.textContent = sortAsc ? ' \u25B2' : ' \u25BC';
+            render();
+          });
+        }
         thead.appendChild(th);
       });
     }
+
+    function toggleServiceDropdown(anchor) {
+      const dd = document.getElementById('serviceDropdown');
+      if (dd.classList.contains('open')) {
+        dd.classList.remove('open');
+        return;
+      }
+      dd.innerHTML = '';
+      const services = [...new Set(rows.map(r => (r.service || '').trim()).filter(Boolean))].sort();
+      const allLink = document.createElement('a');
+      allLink.href = 'javascript:void(0)';
+      allLink.textContent = 'ALL';
+      allLink.addEventListener('click', () => { serviceFilter = null; dd.classList.remove('open'); render(); });
+      dd.appendChild(allLink);
+      for (const s of services) {
+        const link = document.createElement('a');
+        link.href = 'javascript:void(0)';
+        link.textContent = s;
+        link.addEventListener('click', () => { serviceFilter = s.toLowerCase(); dd.classList.remove('open'); render(); });
+        dd.appendChild(link);
+      }
+      const rect = anchor.getBoundingClientRect();
+      dd.style.left = rect.left + 'px';
+      dd.style.top = rect.bottom + 'px';
+      dd.classList.add('open');
+    }
+
+    document.addEventListener('click', (e) => {
+      const dd = document.getElementById('serviceDropdown');
+      if (dd.classList.contains('open') && !dd.contains(e.target)) {
+        dd.classList.remove('open');
+      }
+    });
 
     function render() {
       const tbody = document.getElementById('tbody');
@@ -354,7 +483,10 @@
         });
       }
 
-      const filtered = showStarred ? sorted.filter(r => isStarred(r)) : sorted;
+      let filtered = showStarred ? sorted.filter(r => isStarred(r)) : sorted;
+      if (serviceFilter) {
+        filtered = filtered.filter(r => (r.service || '').toLowerCase() === serviceFilter);
+      }
 
       if (showStarred && filtered.length === 0) {
         const tr = document.createElement('tr');
@@ -442,6 +574,22 @@
       document.getElementById('menuTable').style.display = (mode === 'table' && !showStarred) ? 'none' : '';
       document.getElementById('menuStar').style.display = mode === 'starred' ? 'none' : '';
       document.getElementById('menuAll').style.display = mode === 'starred' ? '' : 'none';
+      document.getElementById('menuSubmit').style.display = mode === 'submit' ? 'none' : '';
+      document.getElementById('submitForm').classList.remove('active');
+
+      if (mode === 'submit') {
+        document.getElementById('tableWrapper').style.display = 'none';
+        document.getElementById('imageFeed').classList.remove('active');
+        document.getElementById('modeLabel').textContent = 'SUBMIT A LISTING';
+        document.getElementById('modeLabel').style.display = '';
+        document.getElementById('separator2').style.display = '';
+        document.getElementById('submitForm').classList.add('active');
+        document.getElementById('submitMsg').textContent = '';
+        document.getElementById('submitBtn').disabled = false;
+        document.getElementById('submitBtn').textContent = 'SUBMIT';
+        updateMenuDividers();
+        return;
+      }
 
       if (mode === 'starred') {
         showStarred = true;
@@ -498,6 +646,51 @@
         render();
       }
       updateMenuDividers();
+    }
+
+    async function submitListing() {
+      const btn = document.getElementById('submitBtn');
+      const msg = document.getElementById('submitMsg');
+      const service = document.getElementById('fService').value.trim();
+      const name = document.getElementById('fName').value.trim();
+
+      if (!service || !name) {
+        msg.textContent = 'SERVICE AND NAME ARE REQUIRED';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'SUBMITTING...';
+      msg.textContent = '';
+
+      try {
+        const res = await fetch('/api/submit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            service,
+            name,
+            site: document.getElementById('fSite').value.trim(),
+            phone: document.getElementById('fPhone').value.trim(),
+            email: document.getElementById('fEmail').value.trim(),
+            board: document.getElementById('fBoard').value.trim()
+          })
+        });
+        if (!res.ok) throw new Error('Failed');
+        msg.textContent = 'SUBMITTED FOR REVIEW';
+        btn.textContent = 'SUBMITTED';
+        document.getElementById('fService').value = '';
+        document.getElementById('fName').value = '';
+        document.getElementById('fSite').value = '';
+        document.getElementById('fPhone').value = '';
+        document.getElementById('fEmail').value = '';
+        document.getElementById('fBoard').value = '';
+        setTimeout(() => { btn.disabled = false; btn.textContent = 'SUBMIT'; }, 3000);
+      } catch (e) {
+        msg.textContent = 'SUBMISSION FAILED. TRY AGAIN.';
+        btn.disabled = false;
+        btn.textContent = 'SUBMIT';
+      }
     }
 
     load();

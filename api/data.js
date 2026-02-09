@@ -1,3 +1,7 @@
+const REPO = 'yuribeats/the-boards';
+const APPROVED_PATH = 'data/approved.json';
+const BRANCH = 'main';
+
 export default async function handler(req, res) {
   const url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR8g_eKM5vTHw_lfM5LGOKDGzJ3pYPq40J3XoY4es7RPF5e_BVCEkJ75jbaKxQiPMX9iL2Kd78mPT_P/pub?output=csv';
 
@@ -40,11 +44,40 @@ export default async function handler(req, res) {
       rows.push(row);
     }
 
+    const approved = await loadApproved();
+    for (const item of approved) {
+      const row = {};
+      for (const col of columns) {
+        row[col] = item[col] || '';
+      }
+      const dateVal = row['date uploaded'] || row['date'] || '';
+      if (dateVal && isMoreRecent(dateVal, lastUpdated)) {
+        lastUpdated = dateVal;
+      }
+      rows.push(row);
+    }
+
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=120');
     return res.status(200).json({ lastUpdated, columns, rows });
   } catch (err) {
     return res.status(500).json({ error: err.message });
+  }
+}
+
+async function loadApproved() {
+  const token = process.env.GITHUB_TOKEN;
+  if (!token) return [];
+  try {
+    const resp = await fetch(
+      `https://api.github.com/repos/${REPO}/contents/${APPROVED_PATH}?ref=${BRANCH}`,
+      { headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' } }
+    );
+    if (!resp.ok) return [];
+    const data = await resp.json();
+    return JSON.parse(Buffer.from(data.content, 'base64').toString('utf8'));
+  } catch {
+    return [];
   }
 }
 

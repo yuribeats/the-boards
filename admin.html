@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>THE BOARDS - ADMIN</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      font-weight: 900;
+      text-transform: uppercase;
+      background: #fff;
+      color: #000;
+      padding: 24px;
+    }
+    h1 { font-size: 36px; letter-spacing: 12px; text-align: center; margin-bottom: 24px; }
+    .separator { border: none; border-top: 2px solid #000; margin: 0 -24px; }
+    .login-wrap { max-width: 400px; margin: 60px auto; text-align: center; }
+    .login-wrap input {
+      font-family: Arial, Helvetica, sans-serif;
+      font-weight: 900;
+      text-transform: uppercase;
+      font-size: 14px;
+      padding: 12px;
+      border: 2px solid #000;
+      width: 100%;
+      margin-bottom: 12px;
+      text-align: center;
+    }
+    .login-wrap input::placeholder { color: #999; }
+    .btn {
+      font-family: Arial, Helvetica, sans-serif;
+      font-weight: 900;
+      text-transform: uppercase;
+      font-size: 14px;
+      padding: 12px 24px;
+      border: 2px solid #000;
+      background: #000;
+      color: #fff;
+      cursor: pointer;
+      display: inline-block;
+    }
+    .btn:hover { background: #fff; color: #000; }
+    .btn-reject {
+      background: #fff;
+      color: #000;
+    }
+    .btn-reject:hover { background: #000; color: #fff; }
+    .card {
+      border: 2px solid #000;
+      margin: 16px 0;
+      padding: 16px;
+    }
+    .card-field { margin-bottom: 8px; font-size: 13px; }
+    .card-label { font-size: 11px; opacity: 0.5; }
+    .card-actions { margin-top: 12px; display: flex; gap: 8px; }
+    .empty { text-align: center; padding: 60px 0; font-size: 16px; }
+    .error { text-align: center; padding: 16px; color: red; font-size: 14px; }
+    .back-link {
+      font-size: 14px;
+      font-weight: 900;
+      text-decoration: none;
+      color: #000;
+      display: inline-block;
+      margin-bottom: 16px;
+    }
+    .back-link:hover { opacity: 0.5; }
+    @media (max-width: 768px) {
+      body { padding: 12px; }
+      h1 { font-size: 24px; letter-spacing: 6px; }
+      .separator { margin: 0 -12px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="loginView">
+    <h1>ADMIN</h1>
+    <hr class="separator">
+    <div class="login-wrap">
+      <input type="password" id="passwordInput" placeholder="PASSWORD">
+      <br>
+      <button class="btn" onclick="login()">ENTER</button>
+      <div class="error" id="loginError" style="display:none"></div>
+    </div>
+  </div>
+
+  <div id="adminView" style="display:none">
+    <a href="/" class="back-link">&larr; BACK TO SITE</a>
+    <h1>PENDING SUBMISSIONS</h1>
+    <hr class="separator">
+    <div id="pendingList"></div>
+  </div>
+
+  <script>
+    let adminPassword = '';
+    const FIELDS = ['service', 'name', 'site', 'phone', 'email', 'board', 'date uploaded'];
+
+    async function login() {
+      adminPassword = document.getElementById('passwordInput').value;
+      if (!adminPassword) return;
+      try {
+        const res = await fetch('/api/pending', {
+          headers: { 'x-admin-password': adminPassword }
+        });
+        if (res.status === 401) {
+          document.getElementById('loginError').textContent = 'WRONG PASSWORD';
+          document.getElementById('loginError').style.display = '';
+          return;
+        }
+        document.getElementById('loginView').style.display = 'none';
+        document.getElementById('adminView').style.display = '';
+        loadPending();
+      } catch (e) {
+        document.getElementById('loginError').textContent = 'CONNECTION ERROR';
+        document.getElementById('loginError').style.display = '';
+      }
+    }
+
+    document.getElementById('passwordInput').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') login();
+    });
+
+    async function loadPending() {
+      const list = document.getElementById('pendingList');
+      list.innerHTML = '<div class="empty">LOADING...</div>';
+
+      try {
+        const res = await fetch('/api/pending', {
+          headers: { 'x-admin-password': adminPassword }
+        });
+        const data = await res.json();
+        const pending = data.pending || [];
+
+        if (pending.length === 0) {
+          list.innerHTML = '<div class="empty">NO PENDING SUBMISSIONS</div>';
+          return;
+        }
+
+        list.innerHTML = '';
+        for (const item of pending) {
+          const card = document.createElement('div');
+          card.className = 'card';
+          let html = '';
+          for (const f of FIELDS) {
+            if (item[f]) {
+              html += '<div class="card-field"><span class="card-label">' + f.toUpperCase() + ': </span>' + escapeHtml(item[f]) + '</div>';
+            }
+          }
+          html += '<div class="card-actions">';
+          html += '<button class="btn" onclick="handleAction(\'' + item.id + '\', \'approve\', this)">APPROVE</button>';
+          html += '<button class="btn btn-reject" onclick="handleAction(\'' + item.id + '\', \'reject\', this)">REJECT</button>';
+          html += '</div>';
+          card.innerHTML = html;
+          list.appendChild(card);
+        }
+      } catch (e) {
+        list.innerHTML = '<div class="error">FAILED TO LOAD</div>';
+      }
+    }
+
+    async function handleAction(id, action, btn) {
+      btn.disabled = true;
+      btn.textContent = action === 'approve' ? 'APPROVING...' : 'REJECTING...';
+
+      try {
+        const res = await fetch('/api/approve', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-admin-password': adminPassword
+          },
+          body: JSON.stringify({ id, action })
+        });
+        if (!res.ok) throw new Error('Failed');
+        loadPending();
+      } catch (e) {
+        btn.textContent = 'ERROR';
+        setTimeout(() => loadPending(), 1000);
+      }
+    }
+
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+  </script>
+</body>
+</html>
