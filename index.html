@@ -719,12 +719,22 @@
       }
     }
 
-    function showProfile(row) {
+    function slugify(str) {
+      return (str || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    }
+
+    function showProfile(row, skipPush) {
       document.getElementById('tableWrapper').style.display = 'none';
       document.querySelector('.separator').style.display = 'none';
+      document.getElementById('modeLabel').style.display = 'none';
+      document.getElementById('separator2').style.display = 'none';
       const profile = document.getElementById('profile');
       profile.classList.add('active');
       profile.innerHTML = '';
+
+      if (!skipPush) {
+        history.pushState(null, '', '/profile/' + slugify(row.name));
+      }
 
       const back = document.createElement('div');
       back.className = 'profile-back';
@@ -734,6 +744,7 @@
         profile.innerHTML = '';
         document.getElementById('tableWrapper').style.display = '';
         document.querySelector('.separator').style.display = '';
+        history.pushState(null, '', '/');
       });
       profile.appendChild(back);
 
@@ -1010,8 +1021,21 @@
       switchMode(mode);
     }
 
+    function openProfileFromUrl() {
+      const m = location.pathname.match(/^\/profile\/(.+)$/);
+      if (!m) return false;
+      const slug = m[1];
+      const row = rows.find(r => slugify(r.name) === slug);
+      if (row) { showProfile(row, true); return true; }
+      return false;
+    }
+
     window.addEventListener('popstate', () => {
       const p = location.pathname;
+      const profile = document.getElementById('profile');
+      profile.classList.remove('active');
+      profile.innerHTML = '';
+      if (p.startsWith('/profile/')) { openProfileFromUrl(); return; }
       if (p === '/starred') switchMode('starred');
       else if (p === '/submit') switchMode('submit');
       else if (p === '/news') switchMode('news');
@@ -1020,7 +1044,8 @@
 
     load().then(() => {
       const p = location.pathname;
-      if (p === '/starred') switchMode('starred');
+      if (p.startsWith('/profile/')) openProfileFromUrl();
+      else if (p === '/starred') switchMode('starred');
       else if (p === '/submit') switchMode('submit');
       else if (p === '/news') switchMode('news');
     });

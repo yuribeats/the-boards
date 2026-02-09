@@ -2,6 +2,7 @@
   "rewrites": [
     { "source": "/submit", "destination": "/index.html" },
     { "source": "/starred", "destination": "/index.html" },
-    { "source": "/news", "destination": "/index.html" }
+    { "source": "/news", "destination": "/index.html" },
+    { "source": "/profile/:slug", "destination": "/index.html" }
   ]
 }
