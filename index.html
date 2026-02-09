@@ -450,14 +450,14 @@
     <span></span><span></span><span></span>
   </div>
   <div class="menu-overlay" id="menu">
-    <a href="javascript:void(0)" id="menuImage" onclick="switchMode('image')">IMAGE MODE</a>
-    <a href="javascript:void(0)" id="menuTable" onclick="switchMode('table')" style="display:none">TABLE MODE</a>
-    <a href="javascript:void(0)" id="menuStar" onclick="switchMode('starred')">&#9733;</a>
-    <a href="javascript:void(0)" id="menuAll" onclick="switchMode('table')" style="display:none">ALL</a>
-    <a href="javascript:void(0)" id="menuSubmit" onclick="switchMode('submit')" class="menu-divider">SUBMIT</a>
+    <a href="/image" id="menuImage" onclick="event.preventDefault();navigate('image')">IMAGE MODE</a>
+    <a href="/" id="menuTable" onclick="event.preventDefault();navigate('table')" style="display:none">TABLE MODE</a>
+    <a href="/starred" id="menuStar" onclick="event.preventDefault();navigate('starred')">&#9733;</a>
+    <a href="/" id="menuAll" onclick="event.preventDefault();navigate('table')" style="display:none">ALL</a>
+    <a href="/submit" id="menuSubmit" onclick="event.preventDefault();navigate('submit')" class="menu-divider">SUBMIT</a>
   </div>
   <div class="header">
-    <h1 onclick="switchMode('table')">THE BOARDS</h1>
+    <h1 onclick="navigate('table')">THE BOARDS</h1>
     <div class="last-updated">SERVING THE NORTH WESTERN PHILADELPHIA AREA</div>
     <div class="last-updated-corner" id="lastUpdated"><span class="lu-label">LAST UPDATED</span><span class="lu-date">FEBRUARY 8, 2026</span></div>
   </div>
@@ -978,7 +978,26 @@
       }
     }
 
-    load();
+    function navigate(mode) {
+      const paths = { table: '/', image: '/image', starred: '/starred', submit: '/submit' };
+      history.pushState(null, '', paths[mode] || '/');
+      switchMode(mode);
+    }
+
+    window.addEventListener('popstate', () => {
+      const p = location.pathname;
+      if (p === '/image') switchMode('image');
+      else if (p === '/starred') switchMode('starred');
+      else if (p === '/submit') switchMode('submit');
+      else switchMode('table');
+    });
+
+    load().then(() => {
+      const p = location.pathname;
+      if (p === '/image') switchMode('image');
+      else if (p === '/starred') switchMode('starred');
+      else if (p === '/submit') switchMode('submit');
+    });
   </script>
 </body>
 </html>
