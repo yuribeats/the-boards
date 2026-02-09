@@ -88,6 +88,12 @@
       width: 1%;
       white-space: nowrap;
     }
+    td:nth-child(5), th:nth-child(5) {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 0;
+    }
 
     th, td {
       text-align: left;
@@ -521,7 +527,7 @@
     let sortAsc = true;
     let showStarred = false;
     let serviceFilter = null;
-    const VISIBLE_COLS = ['service', 'name', 'site'];
+    const VISIBLE_COLS = ['service', 'name', 'site', 'description'];
     const PROFILE_COLS = ['name', 'service', 'description', 'site', 'phone', 'email', 'date uploaded', 'neighborhood'];
     const COL_DISPLAY = { 'service': 'SERVICE TYPE' };
 
