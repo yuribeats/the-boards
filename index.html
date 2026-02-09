@@ -49,7 +49,7 @@
       font-weight: normal;
       letter-spacing: 12px;
       margin-bottom: 4px;
-      cursor: pointer;
+      cursor: default;
     }
 
     .last-updated {
@@ -99,7 +99,7 @@
     }
 
     th {
-      cursor: pointer;
+      cursor: default;
       user-select: none;
       white-space: nowrap;
       font-size: 14px;
@@ -123,7 +123,7 @@
     .star-col {
       width: 30px;
       text-align: center;
-      cursor: pointer;
+      cursor: default;
       font-size: 16px;
       user-select: none;
       vertical-align: bottom;
@@ -142,7 +142,7 @@
       position: absolute;
       top: 24px;
       left: 24px;
-      cursor: pointer;
+      cursor: default;
       z-index: 100;
       display: flex;
       flex-direction: column;
@@ -243,7 +243,7 @@
       width: 100%;
       background: #fff;
       color: #000;
-      cursor: pointer;
+      cursor: default;
     }
     .custom-select-options {
       display: none;
@@ -265,7 +265,7 @@
       text-transform: uppercase;
       font-size: 14px;
       padding: 10px 12px;
-      cursor: pointer;
+      cursor: default;
     }
     .custom-select-option:hover { background: #E3E1DB; }
     .submit-form textarea {
@@ -290,7 +290,7 @@
       width: 100%;
       display: block;
       text-align: center;
-      cursor: pointer;
+      cursor: default;
       background: #fff;
       color: #000;
     }
@@ -313,7 +313,7 @@
       border: 2px solid #000;
       background: #000;
       color: #fff;
-      cursor: pointer;
+      cursor: default;
       margin-top: 24px;
       width: 100%;
     }
@@ -343,7 +343,7 @@
       text-align: center;
       font-size: 14px;
       font-weight: 900;
-      cursor: pointer;
+      cursor: default;
     }
 
     .service-dropdown {
@@ -370,7 +370,7 @@
     .service-dropdown a:hover { background: #000; color: #fff; }
 
     .name-link {
-      cursor: pointer;
+      cursor: default;
       text-decoration: underline;
     }
     .name-link:hover { opacity: 0.5; }
@@ -382,7 +382,7 @@
     }
     .profile.active { display: block; }
     .profile-back {
-      cursor: pointer;
+      cursor: default;
       font-size: 14px;
       font-weight: 900;
       padding: 12px 0;
@@ -438,7 +438,7 @@
     <a href="javascript:void(0)" id="menuSubmit" onclick="switchMode('submit')" class="menu-divider">SUBMIT</a>
   </div>
   <div class="header">
-    <h1 style="cursor:pointer" onclick="switchMode('table')">THE BOARDS</h1>
+    <h1 onclick="switchMode('table')">THE BOARDS</h1>
     <div class="last-updated">SERVING THE NORTH WESTERN PHILADELPHIA AREA</div>
     <div class="last-updated-corner" id="lastUpdated"><span class="lu-label">LAST UPDATED</span><span class="lu-date">FEBRUARY 8, 2026</span></div>
   </div>
